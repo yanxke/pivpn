@@ -1211,7 +1211,7 @@ installPiVPN(){
 setVPNDefaultVars(){
 	# Allow custom subnetClass via unattend setupVARs file. Use default if not provided.
 	if [ -z "$subnetClass" ]; then
-		subnetClass="24"
+		subnetClass="16"
 	fi
 	if [ -z "$subnetClassv6" ]; then
 		subnetClassv6="64"
@@ -1227,7 +1227,7 @@ generateRandomSubnet() {
 	local MATCHES
 	while true; do
 		MATCHES=0
-		pivpnNET="10.$((RANDOM%256)).$((RANDOM%256)).0"
+		pivpnNET="10.$((RANDOM%256)).0.0"
 
 		for SUB in "${SUBNET_EXCLUDE_LIST[@]}"; do
 			if grepcidr "${SUB}" <<< "${pivpnNET}/$subnetClass" 2>&1 > /dev/null; then

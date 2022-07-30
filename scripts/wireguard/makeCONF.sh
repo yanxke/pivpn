@@ -96,18 +96,27 @@ wg genkey | tee "keys/${CLIENT_NAME}_priv" | wg pubkey > "keys/${CLIENT_NAME}_pu
 wg genpsk | tee "keys/${CLIENT_NAME}_psk" &> /dev/null
 echo "::: Client Keys generated"
 
-# Find an unused number for the last octet of the client IP
-for i in {2..254}; do
-    if ! grep -q " $i$" configs/clients.txt; then
-        COUNT="$i"
-        echo "${CLIENT_NAME} $(<keys/"${CLIENT_NAME}"_pub) $(date +%s) ${COUNT}" >> configs/clients.txt
-        break
+# Find an unused number for the last two octets of the client IP
+for i in {0..254}; do
+    STARTADDR=1
+    if [ "$i" -eq 0 ]; then
+        # X.X.0.1 is the server.
+        STARTADDR=2
     fi
+
+    for j in $(seq $STARTADDR 254); do
+        CHECKADDR=$i.$j
+        if ! grep -q " $CHECKADDR$" configs/clients.txt; then
+            COUNT=$CHECKADDR
+            echo "${CLIENT_NAME} $(<keys/"${CLIENT_NAME}"_pub) $(date +%s) ${COUNT}" >> configs/clients.txt
+            break 2
+        fi
+    done
 done
 
 # Disabling SC2154, variables sourced externaly
 # shellcheck disable=SC2154
-NET_REDUCED="${pivpnNET::-2}"
+NET_REDUCED="${pivpnNET::-4}"
 
 # shellcheck disable=SC2154
 if [ "$pivpnenableipv6" == "1" ]; then
